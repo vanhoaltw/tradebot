@@ -5,6 +5,7 @@ import { RedisModule } from './common/redis/redis.module';
 import { DatabaseModule } from './database/database.module';
 import { QueueModule } from './queue/queue.module';
 import { HealthModule } from './health/health.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { HealthModule } from './health/health.module';
     DatabaseModule,
     QueueModule,
     HealthModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
