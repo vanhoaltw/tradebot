@@ -18,6 +18,9 @@ export class BinanceKeyService {
     secret: string,
     label?: string,
   ): Promise<void> {
+    // Non-atomic window: deactivate old key, then insert new one. Under concurrent calls,
+    // a brief window exists where no active key or two active keys could exist. This
+    // is an accepted trade-off for low-frequency key rotation operations.
     await this.keyRepo.update({ userId, isActive: true }, { isActive: false });
     await this.keyRepo.save(
       this.keyRepo.create({
