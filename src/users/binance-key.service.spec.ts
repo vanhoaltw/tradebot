@@ -62,6 +62,9 @@ describe('BinanceKeyService', () => {
         isActive: true,
       });
       expect(keyRepo.save).toHaveBeenCalledWith(record);
+      expect(keyRepo.update.mock.invocationCallOrder[0]).toBeLessThan(
+        keyRepo.save.mock.invocationCallOrder[0],
+      );
     });
 
     it('passes optional label through to the record', async () => {

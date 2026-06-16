@@ -11,7 +11,7 @@ export class BinanceKey {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ name: 'user_id' })
+  @Column({ name: 'user_id', type: 'uuid' })
   userId!: string;
 
   @Column({ name: 'encrypted_api_key', type: 'text' })
@@ -20,7 +20,7 @@ export class BinanceKey {
   @Column({ name: 'encrypted_secret', type: 'text' })
   encryptedSecret!: string;
 
-  @Column({ nullable: true, type: 'text' })
+  @Column({ name: 'label', nullable: true, type: 'text' })
   label?: string;
 
   @Column({ name: 'is_active', default: true })
