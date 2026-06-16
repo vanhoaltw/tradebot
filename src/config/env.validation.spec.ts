@@ -20,11 +20,14 @@ describe('validate (env)', () => {
   });
 
   it('rejects a missing DATABASE_URL', () => {
-    const { DATABASE_URL, ...rest } = valid;
-    expect(() => validate(rest)).toThrow();
+    const incomplete = { ...valid };
+    delete (incomplete as Partial<typeof valid>).DATABASE_URL;
+    expect(() => validate(incomplete)).toThrow();
   });
 
   it('rejects a non-hex ENCRYPTION_KEY of correct length', () => {
-    expect(() => validate({ ...valid, ENCRYPTION_KEY: 'z'.repeat(64) })).toThrow();
+    expect(() =>
+      validate({ ...valid, ENCRYPTION_KEY: 'z'.repeat(64) }),
+    ).toThrow();
   });
 });

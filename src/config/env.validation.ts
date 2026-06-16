@@ -64,7 +64,9 @@ export class EnvironmentVariables {
   MAX_DAILY_SPEND_USDT?: number;
 }
 
-export function validate(config: Record<string, unknown>): EnvironmentVariables {
+export function validate(
+  config: Record<string, unknown>,
+): EnvironmentVariables {
   const validated = plainToInstance(EnvironmentVariables, config, {
     enableImplicitConversion: true,
   });

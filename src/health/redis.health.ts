@@ -15,7 +15,7 @@ export class RedisHealthIndicator extends HealthIndicator {
 
   async pingCheck(key: string): Promise<HealthIndicatorResult> {
     try {
-      const pong = await this.redis.ping();
+      const pong: string = await this.redis.ping();
       if (pong !== 'PONG') {
         throw new Error(`unexpected ping reply: ${pong}`);
       }
