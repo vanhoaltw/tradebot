@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: tradebot
+      POSTGRES_PASSWORD: tradebot
+      POSTGRES_DB: tradebot
+    ports:
+      - '5432:5432'
+    volumes:
+      - tradebot_pg:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+    ports:
+      # Host 6380 to avoid colliding with other local Redis instances; container stays 6379.
+      - '6380:6379'
+
+volumes:
+  tradebot_pg:
