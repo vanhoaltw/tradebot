@@ -20,25 +20,25 @@ export enum NodeEnv {
 
 export class EnvironmentVariables {
   @IsEnum(NodeEnv)
-  NODE_ENV: NodeEnv;
+  NODE_ENV!: NodeEnv;
 
   @IsInt()
   @Min(0)
   @Max(65535)
-  PORT: number;
+  PORT!: number;
 
   // --- Foundation-required ---
   @IsString()
-  DATABASE_URL: string;
+  DATABASE_URL!: string;
 
   @IsString()
-  REDIS_URL: string;
+  REDIS_URL!: string;
 
   /** 32 bytes encoded as 64 hex chars, for AES-256-GCM. */
   @Matches(/^[0-9a-fA-F]{64}$/, {
     message: 'ENCRYPTION_KEY must be 64 hex characters (32 bytes)',
   })
-  ENCRYPTION_KEY: string;
+  ENCRYPTION_KEY!: string;
 
   // --- Consumed by later sub-plans (optional now, still validated) ---
   @IsString()
