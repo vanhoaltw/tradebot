@@ -2,11 +2,12 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: tradebot
-      POSTGRES_PASSWORD: tradebot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 2662001
       POSTGRES_DB: tradebot
     ports:
-      - '5432:5432'
+      # Host 5433 to avoid colliding with the local PostgreSQL 18 service on 5432; container stays 5432.
+      - '5433:5432'
     volumes:
       - tradebot_pg:/var/lib/postgresql/data
   redis:
