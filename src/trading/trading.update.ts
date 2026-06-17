@@ -5,7 +5,7 @@ import { UsersService } from '../users/users.service';
 import { User } from '../users/user.entity';
 import { NOT_REGISTERED_REPLY } from '../telegram/telegram.constants';
 import { NO_KEYS_REPLY } from './trading.constants';
-import { parseBuyArgs, parseSellArgs } from './trade-args';
+import { parseBuyArgs, parseSellArgs, BuyArgs, SellArgs } from './trade-args';
 import {
   TradingService,
   BalancesResult,
@@ -33,7 +33,7 @@ export class TradingUpdate {
   async onBuy(@Ctx() ctx: Context): Promise<void> {
     const user = await this.requireUser(ctx);
     if (!user) return;
-    let args;
+    let args: BuyArgs;
     try {
       args = parseBuyArgs(this.text(ctx));
     } catch (err) {
@@ -48,7 +48,7 @@ export class TradingUpdate {
   async onSell(@Ctx() ctx: Context): Promise<void> {
     const user = await this.requireUser(ctx);
     if (!user) return;
-    let args;
+    let args: SellArgs;
     try {
       args = parseSellArgs(this.text(ctx));
     } catch (err) {
