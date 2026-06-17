@@ -183,7 +183,7 @@ describe('TradingService', () => {
       const result = await service.sell('u1', 'btc', 'all');
 
       expect(deps.trades.record).toHaveBeenCalledWith(
-        expect.objectContaining({ status: TradeStatus.Failed, side: TradeSide.Sell }),
+        expect.objectContaining({ status: TradeStatus.Failed, side: TradeSide.Sell, symbol: 'BTCUSDT' }),
       );
       expect(result).toMatchObject({ kind: 'rejected', reason: expect.stringMatching(/insufficient/i) });
     });
