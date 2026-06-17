@@ -44,6 +44,11 @@ export class BinanceKeyService {
     };
   }
 
+  async hasActiveKey(userId: string): Promise<boolean> {
+    const key = await this.keyRepo.findOneBy({ userId, isActive: true });
+    return key !== null;
+  }
+
   async deleteKeys(userId: string): Promise<void> {
     await this.keyRepo.delete({ userId });
   }

@@ -105,6 +105,29 @@ describe('BinanceKeyService', () => {
     });
   });
 
+  describe('hasActiveKey', () => {
+    it('returns true when an active key exists', async () => {
+      keyRepo.findOneBy.mockResolvedValue({ id: 'k1' } as BinanceKey);
+
+      await expect(service.hasActiveKey('u1')).resolves.toBe(true);
+      expect(keyRepo.findOneBy).toHaveBeenCalledWith({ userId: 'u1', isActive: true });
+    });
+
+    it('returns false when no active key exists', async () => {
+      keyRepo.findOneBy.mockResolvedValue(null);
+
+      await expect(service.hasActiveKey('u1')).resolves.toBe(false);
+    });
+
+    it('does not decrypt anything', async () => {
+      keyRepo.findOneBy.mockResolvedValue({ id: 'k1' } as BinanceKey);
+
+      await service.hasActiveKey('u1');
+
+      expect(encryption.decrypt).not.toHaveBeenCalled();
+    });
+  });
+
   describe('deleteKeys', () => {
     it('deletes all key records for the user', async () => {
       keyRepo.delete.mockResolvedValue({ affected: 2 });
