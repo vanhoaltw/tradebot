@@ -72,7 +72,7 @@ Each unit has one responsibility. `binance.service.ts` is the only place that to
 2. Resolve keys → build testnet client. No keys → friendly /setkeys nudge.
 3. `normalizeSymbol`; fetch symbol filters.
 4. **Check balance:** fetch free USDT; reject if `usdt >` free USDT.
-5. **qty = amountUsdt / price:** fetch current price, compute quantity, round **down** to stepSize. Reject if `qty < minQty` or `usdt < minNotional`.
+5. **qty = amountUsdt / price:** fetch current price, compute quantity, round **down** to stepSize. Reject if `qty < minQty` or if the rounded notional `qty × price < minNotional` (checking the **rounded** quantity, not the raw `usdt` — flooring to stepSize can drop the notional below the minimum even when the input amount cleared it).
 6. **Market order** (BUY by quantity); read avg fill price from the response.
 7. **Persist** a `Trade` (side BUY, status FILLED, qty, avgPrice, binanceOrderId, filledAt).
 8. **Place OCO (SL+TP):** OCO SELL of the filled qty; `takeProfitPrice = avg × 1.10`, `stopPrice = avg × 0.95`, `stopLimitPrice = stopPrice × 0.999`, all rounded to tickSize. **Best-effort:** the buy is already irreversible, so if the OCO is rejected (precision, minNotional, or fees shaved the base balance below the filled qty) the command does **not** fail — it reports the fill plus an explicit "⚠️ unprotected position" warning.
@@ -101,18 +101,20 @@ These prevent Binance `LOT_SIZE` / `PRICE_FILTER` rejections.
 | strategy_id | uuid | **nullable**, no FK yet (strategies module does not exist); always null for manual trades |
 | symbol | varchar | e.g. BTCUSDT |
 | side | enum `trade_side_enum` | BUY · SELL |
-| quantity | numeric | base-asset amount (TypeORM returns numeric as string) |
-| price | numeric | fill price |
+| quantity | numeric | **nullable** — base-asset amount (TypeORM returns numeric as string); null on a FAILED trade that never filled |
+| price | numeric | **nullable** — fill price; null on a FAILED trade that never filled |
 | status | enum `trade_status_enum` | PENDING · FILLED · CANCELLED · FAILED |
 | binance_order_id | varchar | nullable |
 | filled_at | timestamptz | nullable |
 | created_at | timestamptz | default NOW() |
 
-Migration creates `trade_side_enum`, `trade_status_enum`, the `trades` table, and an index on `user_id`. `TradesService.record(...)` writes rows; a Binance order rejection persists a **FAILED** Trade for the audit trail.
+Migration creates `trade_side_enum`, `trade_status_enum`, the `trades` table, and an index on `user_id`. `TradesService.record(...)` writes rows; a Binance order rejection persists a **FAILED** Trade for the audit trail (with `quantity`/`price`/`filled_at` null — the order never filled).
 
 ---
 
 ## 7. Telegram commands (`trading.update.ts`)
+
+**User resolution.** Every command first resolves the Telegram `ctx` to a `User` via `UsersService.findByChatId(chatId)`. Unregistered → reply a `/start` nudge and stop (the same pattern as `telegram.update.ts`'s private `requireUser`; this slice duplicates that small helper inside `TradingUpdate` rather than refactoring a shared one). Only then does it call into `TradingService` with the resolved `userId`. So two distinct early-exit replies exist: **`/start`** when there is no user row, and **`/setkeys`** (raised inside `TradingService` when `getActiveKey` returns null) when the user exists but has no keys.
 
 A `@Update()` provider with:
 - **`/balance`** → `TradingService.getBalances(userId)` → reply listing non-zero balances (asset + free), USDT first. No keys → /setkeys nudge.
@@ -127,6 +129,7 @@ A `@Update()` provider with:
 
 ## 8. Error Handling
 
+- **Unregistered user** (no `User` row for the chat) → friendly "/start" nudge (not an error); resolved at the `TradingUpdate` layer before any service call.
 - **No keys** → friendly "/setkeys" nudge (not an error).
 - **Bad arguments** → reply a usage hint (`Usage: /buy <symbol> <usdt>`).
 - **Per-order cap exceeded / insufficient balance / below minNotional or minQty** → clear, specific rejection; no order submitted.
