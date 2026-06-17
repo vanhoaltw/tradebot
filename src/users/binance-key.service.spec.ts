@@ -105,13 +105,41 @@ describe('BinanceKeyService', () => {
     });
   });
 
+  describe('hasActiveKey', () => {
+    it('returns true when an active key exists', async () => {
+      keyRepo.findOneBy.mockResolvedValue({ id: 'k1' } as BinanceKey);
+
+      await expect(service.hasActiveKey('u1')).resolves.toBe(true);
+      expect(keyRepo.findOneBy).toHaveBeenCalledWith({ userId: 'u1', isActive: true });
+    });
+
+    it('returns false when no active key exists', async () => {
+      keyRepo.findOneBy.mockResolvedValue(null);
+
+      await expect(service.hasActiveKey('u1')).resolves.toBe(false);
+    });
+
+    it('does not decrypt anything', async () => {
+      keyRepo.findOneBy.mockResolvedValue({ id: 'k1' } as BinanceKey);
+
+      await service.hasActiveKey('u1');
+
+      expect(encryption.decrypt).not.toHaveBeenCalled();
+    });
+  });
+
   describe('deleteKeys', () => {
-    it('deletes all key records for the user', async () => {
+    it('deletes all key records for the user and returns true when rows were removed', async () => {
       keyRepo.delete.mockResolvedValue({ affected: 2 });
 
-      await service.deleteKeys('u1');
-
+      await expect(service.deleteKeys('u1')).resolves.toBe(true);
       expect(keyRepo.delete).toHaveBeenCalledWith({ userId: 'u1' });
+    });
+
+    it('returns false when the user had no keys', async () => {
+      keyRepo.delete.mockResolvedValue({ affected: 0 });
+
+      await expect(service.deleteKeys('u1')).resolves.toBe(false);
     });
   });
 });
