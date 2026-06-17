@@ -88,17 +88,24 @@ export class BinanceService {
     symbol: string,
   ): Promise<SymbolFilters> {
     const { data } = await client.exchangeInfo({ symbol });
-    const filters = data.symbols[0].filters;
+    const symbolInfo = data.symbols[0];
+    if (!symbolInfo) {
+      throw new Error(`No exchange info returned for symbol ${symbol}`);
+    }
+    const filters = symbolInfo.filters;
     const lot = filters.find((f) => f.filterType === 'LOT_SIZE');
     const price = filters.find((f) => f.filterType === 'PRICE_FILTER');
     const notional = filters.find(
       (f) => f.filterType === 'NOTIONAL' || f.filterType === 'MIN_NOTIONAL',
     );
+    if (!lot || !price || !notional) {
+      throw new Error(`Missing required filters for ${symbol}`);
+    }
     return {
-      stepSize: Number(lot?.stepSize),
-      minQty: Number(lot?.minQty),
-      tickSize: Number(price?.tickSize),
-      minNotional: Number(notional?.minNotional),
+      stepSize: Number(lot.stepSize),
+      minQty: Number(lot.minQty),
+      tickSize: Number(price.tickSize),
+      minNotional: Number(notional.minNotional),
     };
   }
 

@@ -61,6 +61,25 @@ describe('BinanceService', () => {
     expect(client.exchangeInfo).toHaveBeenCalledWith({ symbol: 'BTCUSDT' });
   });
 
+  it('getSymbolFilters throws when a required filter is missing', async () => {
+    client.exchangeInfo.mockResolvedValue({
+      data: {
+        symbols: [
+          {
+            filters: [
+              { filterType: 'LOT_SIZE', stepSize: '0.00001', minQty: '0.0001' },
+              // PRICE_FILTER and NOTIONAL intentionally absent
+            ],
+          },
+        ],
+      },
+    });
+
+    await expect(service.getSymbolFilters(client, 'BTCUSDT')).rejects.toThrow(
+      /Missing required filters/,
+    );
+  });
+
   it('getPrice returns the ticker price as a number', async () => {
     client.tickerPrice.mockResolvedValue({ data: { symbol: 'BTCUSDT', price: '65000.5' } });
     await expect(service.getPrice(client, 'BTCUSDT')).resolves.toBe(65000.5);
