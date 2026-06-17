@@ -49,7 +49,8 @@ export class BinanceKeyService {
     return key !== null;
   }
 
-  async deleteKeys(userId: string): Promise<void> {
-    await this.keyRepo.delete({ userId });
+  async deleteKeys(userId: string): Promise<boolean> {
+    const result = await this.keyRepo.delete({ userId });
+    return (result.affected ?? 0) > 0;
   }
 }

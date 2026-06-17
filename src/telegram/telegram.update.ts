@@ -2,7 +2,8 @@ import { Command, Ctx, Help, On, Start, Update } from 'nestjs-telegraf';
 import type { Context, Scenes } from 'telegraf';
 import { UsersService } from '../users/users.service';
 import { BinanceKeyService } from '../users/binance-key.service';
-import { HELP_TEXT, SETKEYS_SCENE_ID } from './telegram.constants';
+import { User } from '../users/user.entity';
+import { HELP_TEXT, NOT_REGISTERED_REPLY, SETKEYS_SCENE_ID } from './telegram.constants';
 
 type SceneCtx = Scenes.SceneContext;
 
@@ -15,7 +16,7 @@ export class TelegramUpdate {
 
   @Start()
   async onStart(@Ctx() ctx: Context): Promise<void> {
-    await this.users.findOrCreate(String(ctx.from!.id));
+    await this.users.findOrCreate(this.chatId(ctx));
     await ctx.reply(
       'Welcome to the trading bot. Run /setkeys to connect your Binance account, then /status to check it.',
     );
@@ -28,11 +29,8 @@ export class TelegramUpdate {
 
   @Command('status')
   async onStatus(@Ctx() ctx: Context): Promise<void> {
-    const user = await this.users.findByChatId(String(ctx.from!.id));
-    if (!user) {
-      await ctx.reply('You are not registered yet. Send /start first.');
-      return;
-    }
+    const user = await this.requireUser(ctx);
+    if (!user) return;
     const configured = await this.keys.hasActiveKey(user.id);
     await ctx.reply(
       `API keys: ${configured ? 'configured ✅' : 'not set — run /setkeys'}\nStrategies: coming soon`,
@@ -41,13 +39,14 @@ export class TelegramUpdate {
 
   @Command('deletekeys')
   async onDeleteKeys(@Ctx() ctx: Context): Promise<void> {
-    const user = await this.users.findByChatId(String(ctx.from!.id));
-    if (!user) {
-      await ctx.reply('You are not registered yet. Send /start first.');
-      return;
-    }
-    await this.keys.deleteKeys(user.id);
-    await ctx.reply('Your stored API keys have been removed.');
+    const user = await this.requireUser(ctx);
+    if (!user) return;
+    const removed = await this.keys.deleteKeys(user.id);
+    await ctx.reply(
+      removed
+        ? 'Your stored API keys have been removed.'
+        : 'You have no stored API keys to remove.',
+    );
   }
 
   @Help()
@@ -58,5 +57,19 @@ export class TelegramUpdate {
   @On('text')
   async onText(@Ctx() ctx: Context): Promise<void> {
     await ctx.reply('Unrecognized message. Send /help to see what I can do.');
+  }
+
+  private chatId(ctx: Context): string {
+    return String(ctx.from!.id);
+  }
+
+  /** Resolve the registered user, or reply prompting /start and return null. */
+  private async requireUser(ctx: Context): Promise<User | null> {
+    const user = await this.users.findByChatId(this.chatId(ctx));
+    if (!user) {
+      await ctx.reply(NOT_REGISTERED_REPLY);
+      return null;
+    }
+    return user;
   }
 }

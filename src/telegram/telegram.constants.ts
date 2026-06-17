@@ -11,3 +11,5 @@ export const HELP_TEXT = [
   '/deletekeys — remove stored keys',
   '/help — show this message',
 ].join('\n');
+
+export const NOT_REGISTERED_REPLY = 'You are not registered yet. Send /start first.';

@@ -86,13 +86,24 @@ describe('TelegramUpdate', () => {
 
     it('deletes stored keys for a registered user', async () => {
       services.users.findByChatId.mockResolvedValue({ id: 'u1' });
-      services.keys.deleteKeys.mockResolvedValue(undefined);
+      services.keys.deleteKeys.mockResolvedValue(true);
       const ctx = makeCtx();
 
       await update.onDeleteKeys(ctx as never);
 
       expect(services.keys.deleteKeys).toHaveBeenCalledWith('u1');
       expect(ctx.reply.mock.calls[0][0]).toMatch(/removed/i);
+    });
+
+    it('tells the user when there were no keys to remove', async () => {
+      services.users.findByChatId.mockResolvedValue({ id: 'u1' });
+      services.keys.deleteKeys.mockResolvedValue(false);
+      const ctx = makeCtx();
+
+      await update.onDeleteKeys(ctx as never);
+
+      expect(services.keys.deleteKeys).toHaveBeenCalledWith('u1');
+      expect(ctx.reply.mock.calls[0][0]).toMatch(/no stored|no api keys/i);
     });
   });
 

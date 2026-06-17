@@ -129,12 +129,17 @@ describe('BinanceKeyService', () => {
   });
 
   describe('deleteKeys', () => {
-    it('deletes all key records for the user', async () => {
+    it('deletes all key records for the user and returns true when rows were removed', async () => {
       keyRepo.delete.mockResolvedValue({ affected: 2 });
 
-      await service.deleteKeys('u1');
-
+      await expect(service.deleteKeys('u1')).resolves.toBe(true);
       expect(keyRepo.delete).toHaveBeenCalledWith({ userId: 'u1' });
+    });
+
+    it('returns false when the user had no keys', async () => {
+      keyRepo.delete.mockResolvedValue({ affected: 0 });
+
+      await expect(service.deleteKeys('u1')).resolves.toBe(false);
     });
   });
 });
