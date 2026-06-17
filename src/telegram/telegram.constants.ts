@@ -9,6 +9,9 @@ export const HELP_TEXT = [
   '/setkeys — connect your Binance API keys',
   '/status — check your setup',
   '/deletekeys — remove stored keys',
+  '/balance — show your testnet balances',
+  '/buy <symbol> <usdt> — market buy + protective OCO',
+  '/sell <symbol> <usdt|all> — market sell',
   '/help — show this message',
 ].join('\n');
 
