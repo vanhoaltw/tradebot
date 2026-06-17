@@ -50,14 +50,17 @@ export class SetkeysWizard {
     }
 
     const apiKey = ctx.wizard.state.apiKey;
-    if (!apiKey) {
+    if (!apiKey || !ctx.from) {
       await ctx.reply('Something went wrong — please start over with /setkeys.');
       await ctx.scene.leave();
       return;
     }
 
-    const user = await this.users.findOrCreate(String(ctx.from!.id));
+    const user = await this.users.findOrCreate(String(ctx.from.id));
     await this.keys.upsertKey(user.id, apiKey, text);
+    // Clear the plaintext key from session state so it does not linger in Redis
+    // until the session TTL expires.
+    ctx.wizard.state.apiKey = undefined;
     await ctx.reply('Your Binance API keys are saved securely. ✅');
     await ctx.scene.leave();
   }

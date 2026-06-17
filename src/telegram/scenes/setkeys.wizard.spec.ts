@@ -3,7 +3,7 @@ import { SetkeysWizard } from './setkeys.wizard';
 const VALID = 'a'.repeat(64);
 
 const makeServices = () => ({
-  users: { findOrCreate: jest.fn(), findByChatId: jest.fn() },
+  users: { findOrCreate: jest.fn() },
   keys: { upsertKey: jest.fn() },
 });
 
@@ -79,6 +79,7 @@ describe('SetkeysWizard', () => {
 
       await wizard.step3Secret(ctx as never);
 
+      expect(ctx.deleteMessage).toHaveBeenCalled();
       expect(services.keys.upsertKey).not.toHaveBeenCalled();
       expect(ctx.scene.leave).not.toHaveBeenCalled();
       expect(ctx.reply.mock.calls[0][0]).toMatch(/again|invalid/i);
