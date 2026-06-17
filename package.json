@@ -24,6 +24,7 @@
     "migration:revert": "pnpm run typeorm migration:revert"
   },
   "dependencies": {
+    "@binance/connector": "^3.6.1",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
