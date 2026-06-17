@@ -38,9 +38,11 @@ import { TelegramUpdate } from './telegram.update';
 export class TelegramModule {
   constructor(@InjectBot() private readonly bot: Telegraf) {
     // Global safety net: a throwing handler must never crash the bot process.
-    this.bot.catch((err) => {
+    this.bot.catch((err, ctx) => {
       // eslint-disable-next-line no-console
       console.error('[telegram] handler error', err);
+      // Best-effort user feedback; never throw from the catch handler itself.
+      void ctx.reply('Something went wrong. Please try again.').catch(() => undefined);
     });
   }
 }

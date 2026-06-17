@@ -71,6 +71,7 @@ describe('SetkeysWizard', () => {
       expect(services.users.findOrCreate).toHaveBeenCalledWith('123');
       expect(services.keys.upsertKey).toHaveBeenCalledWith('user-uuid', VALID, VALID);
       expect(ctx.scene.leave).toHaveBeenCalled();
+      expect(ctx.wizard.state.apiKey).toBeUndefined();
     });
 
     it('re-prompts and does not store on invalid input', async () => {
@@ -83,6 +84,36 @@ describe('SetkeysWizard', () => {
       expect(services.keys.upsertKey).not.toHaveBeenCalled();
       expect(ctx.scene.leave).not.toHaveBeenCalled();
       expect(ctx.reply.mock.calls[0][0]).toMatch(/again|invalid/i);
+    });
+  });
+
+  describe('commands during a step', () => {
+    it('treats /cancel as cancel (leaves the scene, does not delete)', async () => {
+      const ctx = makeCtx('/cancel');
+      await wizard.step2ApiKey(ctx as never);
+
+      expect(ctx.scene.leave).toHaveBeenCalled();
+      expect(ctx.deleteMessage).not.toHaveBeenCalled();
+      expect(ctx.wizard.next).not.toHaveBeenCalled();
+    });
+
+    it('does not treat another command as key input (no delete, no advance, nudges to /cancel)', async () => {
+      const ctx = makeCtx('/status');
+      await wizard.step2ApiKey(ctx as never);
+
+      expect(ctx.deleteMessage).not.toHaveBeenCalled();
+      expect(ctx.wizard.state.apiKey).toBeUndefined();
+      expect(ctx.wizard.next).not.toHaveBeenCalled();
+      expect(ctx.reply.mock.calls[0][0]).toMatch(/cancel/i);
+    });
+
+    it('does not store a secret when a command is sent during step 3', async () => {
+      const ctx = makeCtx('/status');
+      ctx.wizard.state.apiKey = 'a'.repeat(64);
+      await wizard.step3Secret(ctx as never);
+
+      expect(ctx.deleteMessage).not.toHaveBeenCalled();
+      expect(ctx.scene.leave).not.toHaveBeenCalled();
     });
   });
 

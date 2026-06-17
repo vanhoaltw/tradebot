@@ -27,6 +27,7 @@ export class SetkeysWizard {
   @WizardStep(2)
   async step2ApiKey(@Ctx() ctx: WizardCtx): Promise<void> {
     const text = this.extractText(ctx);
+    if (await this.handleCommand(ctx, text)) return;
     await this.tryDelete(ctx);
 
     if (!text || !isPlausibleBinanceKey(text)) {
@@ -42,6 +43,7 @@ export class SetkeysWizard {
   @WizardStep(3)
   async step3Secret(@Ctx() ctx: WizardCtx): Promise<void> {
     const text = this.extractText(ctx);
+    if (await this.handleCommand(ctx, text)) return;
     await this.tryDelete(ctx);
 
     if (!text || !isPlausibleBinanceKey(text)) {
@@ -69,6 +71,25 @@ export class SetkeysWizard {
   async onCancel(@Ctx() ctx: WizardCtx): Promise<void> {
     await ctx.reply('Cancelled. Your keys were not changed.');
     await ctx.scene.leave();
+  }
+
+  /**
+   * If the incoming message is a command (starts with '/'), handle it without
+   * treating it as key input and without deleting it: '/cancel' leaves the scene,
+   * any other command nudges the user to finish or cancel first. Returns true if
+   * the message was a command (the caller should then stop processing the step).
+   */
+  private async handleCommand(ctx: WizardCtx, text: string | undefined): Promise<boolean> {
+    if (!text || !text.startsWith('/')) {
+      return false;
+    }
+    if (text === '/cancel') {
+      await ctx.reply('Cancelled. Your keys were not changed.');
+      await ctx.scene.leave();
+    } else {
+      await ctx.reply('You are mid-setup. Send /cancel to abort, then retry your command.');
+    }
+    return true;
   }
 
   private extractText(ctx: WizardCtx): string | undefined {
