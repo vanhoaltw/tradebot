@@ -80,6 +80,27 @@ describe('BinanceService', () => {
     );
   });
 
+  it('getSymbolFilters throws when a filter field yields NaN (e.g. stepSize is absent)', async () => {
+    client.exchangeInfo.mockResolvedValue({
+      data: {
+        symbols: [
+          {
+            filters: [
+              // LOT_SIZE present but stepSize is undefined (absent key)
+              { filterType: 'LOT_SIZE', minQty: '0.0001' },
+              { filterType: 'PRICE_FILTER', tickSize: '0.01' },
+              { filterType: 'NOTIONAL', minNotional: '10' },
+            ],
+          },
+        ],
+      },
+    });
+
+    await expect(service.getSymbolFilters(client, 'BTCUSDT')).rejects.toThrow(
+      /Invalid filter values for BTCUSDT/,
+    );
+  });
+
   it('getPrice returns the ticker price as a number', async () => {
     client.tickerPrice.mockResolvedValue({ data: { symbol: 'BTCUSDT', price: '65000.5' } });
     await expect(service.getPrice(client, 'BTCUSDT')).resolves.toBe(65000.5);

@@ -93,16 +93,20 @@ export class TradingService {
       return { kind: 'rejected', reason: binanceReason(err) };
     }
 
-    await this.trades.record({
-      userId,
-      symbol,
-      side: TradeSide.Buy,
-      status: TradeStatus.Filled,
-      quantity: fill.executedQty,
-      price: fill.avgPrice,
-      binanceOrderId: String(fill.orderId),
-      filledAt: new Date(),
-    });
+    try {
+      await this.trades.record({
+        userId,
+        symbol,
+        side: TradeSide.Buy,
+        status: TradeStatus.Filled,
+        quantity: fill.executedQty,
+        price: fill.avgPrice,
+        binanceOrderId: String(fill.orderId),
+        filledAt: new Date(),
+      });
+    } catch {
+      // fill already executed on Binance — do not abort OCO placement / reply
+    }
 
     const takeProfitPrice = roundToTick(fill.avgPrice * (1 + TAKE_PROFIT_PCT), filters.tickSize);
     const stopPrice = roundToTick(fill.avgPrice * (1 - STOP_LOSS_PCT), filters.tickSize);
@@ -126,7 +130,12 @@ export class TradingService {
     const symbol = normalizeSymbol(rawSymbol);
 
     // Cancel any resting OCO for this symbol before selling (parent spec §6).
-    await this.binance.cancelOpenOrders(client, symbol);
+    // Best-effort: a cancel failure (e.g. nothing to cancel, transient error) must not block the sell.
+    try {
+      await this.binance.cancelOpenOrders(client, symbol);
+    } catch {
+      // ignore — proceed to sell
+    }
 
     const filters = await this.binance.getSymbolFilters(client, symbol);
     const price = await this.binance.getPrice(client, symbol);
@@ -156,16 +165,20 @@ export class TradingService {
       return { kind: 'rejected', reason: binanceReason(err) };
     }
 
-    await this.trades.record({
-      userId,
-      symbol,
-      side: TradeSide.Sell,
-      status: TradeStatus.Filled,
-      quantity: fill.executedQty,
-      price: fill.avgPrice,
-      binanceOrderId: String(fill.orderId),
-      filledAt: new Date(),
-    });
+    try {
+      await this.trades.record({
+        userId,
+        symbol,
+        side: TradeSide.Sell,
+        status: TradeStatus.Filled,
+        quantity: fill.executedQty,
+        price: fill.avgPrice,
+        binanceOrderId: String(fill.orderId),
+        filledAt: new Date(),
+      });
+    } catch {
+      // fill already executed on Binance — do not abort reporting
+    }
 
     return { kind: 'filled', symbol, quantity: fill.executedQty, avgPrice: fill.avgPrice };
   }

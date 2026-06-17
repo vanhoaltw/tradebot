@@ -101,12 +101,21 @@ export class BinanceService {
     if (!lot || !price || !notional) {
       throw new Error(`Missing required filters for ${symbol}`);
     }
-    return {
+    const result = {
       stepSize: Number(lot.stepSize),
       minQty: Number(lot.minQty),
       tickSize: Number(price.tickSize),
       minNotional: Number(notional.minNotional),
     };
+    if (
+      Number.isNaN(result.stepSize) ||
+      Number.isNaN(result.minQty) ||
+      Number.isNaN(result.tickSize) ||
+      Number.isNaN(result.minNotional)
+    ) {
+      throw new Error(`Invalid filter values for ${symbol}`);
+    }
+    return result;
   }
 
   async getPrice(client: SpotClient, symbol: string): Promise<number> {

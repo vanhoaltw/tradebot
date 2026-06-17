@@ -140,6 +140,23 @@ describe('TradingService', () => {
       );
       expect(result).toMatchObject({ kind: 'rejected', reason: expect.stringMatching(/LOT_SIZE/) });
     });
+
+    it('still places OCO and returns filled when trades.record rejects after a successful marketBuy', async () => {
+      deps.binance.marketBuy.mockResolvedValue({ orderId: 42, executedQty: 0.001, avgPrice: 50000 });
+      deps.binance.placeOcoSell.mockResolvedValue({ orderListId: 99 });
+      deps.trades.record.mockRejectedValue(new Error('DB connection lost'));
+
+      const result = await service.buy('u1', 'btc', 50);
+
+      expect(deps.binance.placeOcoSell).toHaveBeenCalled();
+      expect(result).toEqual({
+        kind: 'filled',
+        symbol: 'BTCUSDT',
+        quantity: 0.001,
+        avgPrice: 50000,
+        oco: { placed: true },
+      });
+    });
   });
 
   describe('sell', () => {
@@ -186,6 +203,16 @@ describe('TradingService', () => {
         expect.objectContaining({ status: TradeStatus.Failed, side: TradeSide.Sell, symbol: 'BTCUSDT' }),
       );
       expect(result).toMatchObject({ kind: 'rejected', reason: expect.stringMatching(/insufficient/i) });
+    });
+
+    it('still calls marketSell and returns filled when cancelOpenOrders rejects', async () => {
+      deps.binance.cancelOpenOrders.mockRejectedValue(new Error('cancel failed'));
+      deps.binance.marketSell.mockResolvedValue({ orderId: 7, executedQty: 0.0005, avgPrice: 50000 });
+
+      const result = await service.sell('u1', 'btc', 25);
+
+      expect(deps.binance.marketSell).toHaveBeenCalledWith(expect.anything(), 'BTCUSDT', 0.0005);
+      expect(result).toEqual({ kind: 'filled', symbol: 'BTCUSDT', quantity: 0.0005, avgPrice: 50000 });
     });
   });
 });

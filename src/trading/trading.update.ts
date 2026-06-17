@@ -40,8 +40,12 @@ export class TradingUpdate {
       await ctx.reply((err as Error).message);
       return;
     }
-    const result = await this.trading.buy(user.id, args.symbol, args.usdt);
-    await ctx.reply(this.formatBuy(result));
+    try {
+      const result = await this.trading.buy(user.id, args.symbol, args.usdt);
+      await ctx.reply(this.formatBuy(result));
+    } catch (err) {
+      await ctx.reply(`Could not complete /buy: ${(err as Error).message}`);
+    }
   }
 
   @Command('sell')
@@ -55,8 +59,12 @@ export class TradingUpdate {
       await ctx.reply((err as Error).message);
       return;
     }
-    const result = await this.trading.sell(user.id, args.symbol, args.amount);
-    await ctx.reply(this.formatSell(result));
+    try {
+      const result = await this.trading.sell(user.id, args.symbol, args.amount);
+      await ctx.reply(this.formatSell(result));
+    } catch (err) {
+      await ctx.reply(`Could not complete /sell: ${(err as Error).message}`);
+    }
   }
 
   // --- formatting ---

@@ -103,5 +103,23 @@ describe('TradingUpdate', () => {
       expect(deps.trading.sell).toHaveBeenCalledWith('u1', 'btc', 'all');
       expect(ctx.reply.mock.calls[0][0]).toMatch(/BTCUSDT/);
     });
+
+    it('replies "Could not complete /sell" when the service throws unexpectedly', async () => {
+      deps.trading.sell.mockRejectedValue(new Error('network timeout'));
+      const ctx = makeCtx('/sell btc all');
+      await update.onSell(ctx as never);
+      expect(ctx.reply.mock.calls[0][0]).toMatch(/Could not complete \/sell/);
+      expect(ctx.reply.mock.calls[0][0]).toMatch(/network timeout/);
+    });
+  });
+
+  describe('/buy error handling', () => {
+    it('replies "Could not complete /buy" when the service throws unexpectedly', async () => {
+      deps.trading.buy.mockRejectedValue(new Error('symbol filters unavailable'));
+      const ctx = makeCtx('/buy btc 50');
+      await update.onBuy(ctx as never);
+      expect(ctx.reply.mock.calls[0][0]).toMatch(/Could not complete \/buy/);
+      expect(ctx.reply.mock.calls[0][0]).toMatch(/symbol filters unavailable/);
+    });
   });
 });
