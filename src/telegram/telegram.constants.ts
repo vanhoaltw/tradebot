@@ -15,4 +15,5 @@ export const HELP_TEXT = [
   '/help — show this message',
 ].join('\n');
 
-export const NOT_REGISTERED_REPLY = 'You are not registered yet. Send /start first.';
+export const NOT_REGISTERED_REPLY =
+  'You are not registered yet. Send /start first.';

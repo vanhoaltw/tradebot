@@ -3,7 +3,11 @@ import type { Context, Scenes } from 'telegraf';
 import { UsersService } from '../users/users.service';
 import { BinanceKeyService } from '../users/binance-key.service';
 import { User } from '../users/user.entity';
-import { HELP_TEXT, NOT_REGISTERED_REPLY, SETKEYS_SCENE_ID } from './telegram.constants';
+import {
+  HELP_TEXT,
+  NOT_REGISTERED_REPLY,
+  SETKEYS_SCENE_ID,
+} from './telegram.constants';
 
 type SceneCtx = Scenes.SceneContext;
 
@@ -12,7 +16,9 @@ export class TelegramUpdate {
   constructor(
     private readonly users: UsersService,
     private readonly keys: BinanceKeyService,
-  ) {}
+  ) {
+    console.log('inoi ip[date');
+  }
 
   @Start()
   async onStart(@Ctx() ctx: Context): Promise<void> {

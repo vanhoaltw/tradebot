@@ -18,7 +18,9 @@ import { TelegramUpdate } from './telegram.update';
       useFactory: (config: ConfigService, redis: Redis) => {
         const token = config.get<string>('TELEGRAM_BOT_TOKEN', { infer: true });
         if (!token) {
-          throw new Error('TELEGRAM_BOT_TOKEN is required to start the Telegram bot');
+          throw new Error(
+            'TELEGRAM_BOT_TOKEN is required to start the Telegram bot',
+          );
         }
         const store = new RedisSessionStore(redis);
         return {
@@ -26,7 +28,10 @@ import { TelegramUpdate } from './telegram.update';
           middlewares: [
             session({
               store,
-              getSessionKey: (ctx) => (ctx.from ? String(ctx.from.id) : undefined),
+              getSessionKey: (ctx) => {
+                console.log({ ctx });
+                return ctx.from ? String(ctx.from.id) : undefined;
+              },
             }),
           ],
         };
@@ -39,10 +44,11 @@ export class TelegramModule {
   constructor(@InjectBot() private readonly bot: Telegraf) {
     // Global safety net: a throwing handler must never crash the bot process.
     this.bot.catch((err, ctx) => {
-      // eslint-disable-next-line no-console
       console.error('[telegram] handler error', err);
       // Best-effort user feedback; never throw from the catch handler itself.
-      void ctx.reply('Something went wrong. Please try again.').catch(() => undefined);
+      void ctx
+        .reply('Something went wrong. Please try again.')
+        .catch(() => undefined);
     });
   }
 }

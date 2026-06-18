@@ -18,7 +18,12 @@ export class RedisSessionStore {
   }
 
   async set(name: string, value: unknown): Promise<void> {
-    await this.redis.set(this.key(name), JSON.stringify(value), 'EX', SESSION_TTL_SECONDS);
+    await this.redis.set(
+      this.key(name),
+      JSON.stringify(value),
+      'EX',
+      SESSION_TTL_SECONDS,
+    );
   }
 
   async delete(name: string): Promise<void> {

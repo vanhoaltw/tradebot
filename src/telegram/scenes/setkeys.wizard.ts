@@ -31,7 +31,9 @@ export class SetkeysWizard {
     await this.tryDelete(ctx);
 
     if (!text || !isPlausibleBinanceKey(text)) {
-      await ctx.reply('That does not look like a valid API key (64 characters). Try again, or /cancel.');
+      await ctx.reply(
+        'That does not look like a valid API key (64 characters). Try again, or /cancel.',
+      );
       return;
     }
 
@@ -47,13 +49,17 @@ export class SetkeysWizard {
     await this.tryDelete(ctx);
 
     if (!text || !isPlausibleBinanceKey(text)) {
-      await ctx.reply('That does not look like a valid API secret (64 characters). Try again, or /cancel.');
+      await ctx.reply(
+        'That does not look like a valid API secret (64 characters). Try again, or /cancel.',
+      );
       return;
     }
 
     const apiKey = ctx.wizard.state.apiKey;
     if (!apiKey || !ctx.from) {
-      await ctx.reply('Something went wrong — please start over with /setkeys.');
+      await ctx.reply(
+        'Something went wrong — please start over with /setkeys.',
+      );
       await ctx.scene.leave();
       return;
     }
@@ -79,7 +85,10 @@ export class SetkeysWizard {
    * any other command nudges the user to finish or cancel first. Returns true if
    * the message was a command (the caller should then stop processing the step).
    */
-  private async handleCommand(ctx: WizardCtx, text: string | undefined): Promise<boolean> {
+  private async handleCommand(
+    ctx: WizardCtx,
+    text: string | undefined,
+  ): Promise<boolean> {
     if (!text || !text.startsWith('/')) {
       return false;
     }
@@ -87,7 +96,9 @@ export class SetkeysWizard {
       await ctx.reply('Cancelled. Your keys were not changed.');
       await ctx.scene.leave();
     } else {
-      await ctx.reply('You are mid-setup. Send /cancel to abort, then retry your command.');
+      await ctx.reply(
+        'You are mid-setup. Send /cancel to abort, then retry your command.',
+      );
     }
     return true;
   }
